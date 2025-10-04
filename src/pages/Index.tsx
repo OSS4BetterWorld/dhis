@@ -1,7 +1,8 @@
 import { DisasterCard } from "@/components/DisasterCard";
 import { HistoricalRecords } from "@/components/HistoricalRecord";
 import { MonitoringDashboard } from "@/components/MonitoringDashboard";
-import { 
+import { ExposureInformation } from "@/components/ExposureInformation";
+import {
   CloudRain, 
   Waves, 
   Wind, 
@@ -107,6 +108,11 @@ const Index = () => {
         {/* Monitoring Dashboard */}
         <section>
           <MonitoringDashboard />
+        </section>
+
+        {/* Exposure Information */}
+        <section>
+          <ExposureInformation />
         </section>
       </div>
     </div>
