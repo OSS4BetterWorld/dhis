@@ -1,110 +1,60 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Users, 
-  Building2, 
-  Factory, 
-  Landmark, 
+import {
+  Users,
+  Building2,
+  Factory,
+  Landmark,
   MapPin,
-  AlertCircle,
   Heart,
-  GraduationCap,
   Zap,
   Radio,
-  Plane,
-  Package,
+  Warehouse,
   ShoppingBag,
-  Sprout
+  Sprout,
+  Loader2,
 } from "lucide-react";
-
-interface PopulationData {
-  region: string;
-  density: number;
-  type: "urban" | "rural";
-  population: number;
-}
-
-interface VulnerableGroup {
-  category: string;
-  count: number;
-  percentage: number;
-  icon: typeof Users;
-}
-
-interface Infrastructure {
-  name: string;
-  type: string;
-  location: string;
-  status: "operational" | "at-risk" | "damaged";
-  icon: typeof Building2;
-}
-
-interface Asset {
-  name: string;
-  type: string;
-  value: string;
-  employees?: number;
-  icon: typeof Factory;
-}
-
-interface Heritage {
-  name: string;
-  type: string;
-  significance: "high" | "medium" | "low";
-  yearBuilt?: string;
-}
-
-const populationData: PopulationData[] = [
-  { region: "Central District", density: 8500, type: "urban", population: 450000 },
-  { region: "Northern Zone", density: 6200, type: "urban", population: 320000 },
-  { region: "Eastern Villages", density: 450, type: "rural", population: 85000 },
-  { region: "Western Plains", density: 380, type: "rural", population: 62000 }
-];
-
-const vulnerableGroups: VulnerableGroup[] = [
-  { category: "Children (0-14)", count: 185000, percentage: 20, icon: Users },
-  { category: "Elderly (65+)", count: 138000, percentage: 15, icon: Heart },
-  { category: "Disabled", count: 92000, percentage: 10, icon: AlertCircle },
-  { category: "Low-income households", count: 230000, percentage: 25, icon: Users }
-];
-
-const criticalInfrastructure: Infrastructure[] = [
-  { name: "Central Hospital", type: "Healthcare", location: "Central District", status: "operational", icon: Heart },
-  { name: "Regional Medical Center", type: "Healthcare", location: "Northern Zone", status: "operational", icon: Heart },
-  { name: "State University", type: "Education", location: "Central District", status: "operational", icon: GraduationCap },
-  { name: "Primary School Network", type: "Education", location: "Multiple", status: "at-risk", icon: GraduationCap },
-  { name: "Main Power Plant", type: "Energy", location: "Western Plains", status: "operational", icon: Zap },
-  { name: "Telecom Tower Hub", type: "Communication", location: "Central District", status: "operational", icon: Radio },
-  { name: "International Airport", type: "Transport", location: "Northern Zone", status: "operational", icon: Plane }
-];
-
-const economicAssets: Asset[] = [
-  { name: "Industrial Park Alpha", type: "Manufacturing", value: "$450M", employees: 3500, icon: Factory },
-  { name: "Distribution Center", type: "Logistics", value: "$180M", employees: 850, icon: Package },
-  { name: "Shopping Mall Complex", type: "Commercial", value: "$220M", employees: 1200, icon: ShoppingBag },
-  { name: "Agricultural Cooperative", type: "Agriculture", value: "$95M", employees: 2100, icon: Sprout }
-];
-
-const culturalHeritage: Heritage[] = [
-  { name: "Ancient Temple Complex", type: "Religious Site", significance: "high", yearBuilt: "1420" },
-  { name: "Historical Monument", type: "Monument", significance: "high", yearBuilt: "1856" },
-  { name: "National Archives", type: "Archive", significance: "high", yearBuilt: "1932" },
-  { name: "Old Town Hall", type: "Historic Building", significance: "medium", yearBuilt: "1889" }
-];
+import { mockApi } from "@/services/mockApi";
 
 export const ExposureInformation = () => {
-  const statusColors = {
-    operational: "bg-success text-primary-foreground",
-    "at-risk": "bg-warning text-foreground",
-    damaged: "bg-destructive text-destructive-foreground"
-  };
+  const [exposureData, setExposureData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const significanceColors = {
-    high: "bg-destructive text-destructive-foreground",
-    medium: "bg-warning text-foreground",
-    low: "bg-success text-primary-foreground"
-  };
+  useEffect(() => {
+    const fetchExposureData = async () => {
+      setLoading(true);
+      try {
+        const data = await mockApi.getExposureData();
+        setExposureData(data);
+      } catch (error) {
+        console.error("Error fetching exposure data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExposureData();
+  }, []);
+
+  if (loading || !exposureData) {
+    return (
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-card-foreground flex items-center gap-3">
+            <MapPin className="h-8 w-8 text-primary" />
+            Exposure Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -123,23 +73,27 @@ export const ExposureInformation = () => {
           <CardDescription>Urban and rural population distribution</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {populationData.map((data) => (
-              <div key={data.region} className="p-4 rounded-lg bg-secondary/30 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-foreground">{data.region}</h4>
-                  <Badge variant="outline" className="border-primary text-primary">
-                    {data.type.toUpperCase()}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Population: <span className="font-medium text-foreground">{data.population.toLocaleString()}</span>
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Density: <span className="font-medium text-foreground">{data.density} per km²</span>
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 className="h-5 w-5 text-primary" />
+                <h4 className="font-semibold text-foreground">Urban Population</h4>
               </div>
-            ))}
+              <p className="text-3xl font-bold text-foreground mb-2">
+                {exposureData.population.urban.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Total urban residents</p>
+            </div>
+            <div className="p-6 rounded-lg bg-gradient-to-br from-success/10 to-success/5 border border-success/20">
+              <div className="flex items-center gap-2 mb-4">
+                <Sprout className="h-5 w-5 text-success" />
+                <h4 className="font-semibold text-foreground">Rural Population</h4>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-2">
+                {exposureData.population.rural.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Total rural residents</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -154,22 +108,47 @@ export const ExposureInformation = () => {
           <CardDescription>At-risk populations requiring priority protection</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {vulnerableGroups.map((group) => (
-              <div key={group.category} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <group.icon className="h-5 w-5 text-primary" />
-                    <span className="font-medium text-foreground">{group.category}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-foreground">{group.count.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">{group.percentage}% of population</p>
-                  </div>
-                </div>
-                <Progress value={group.percentage} className="h-2" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-secondary/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="h-5 w-5 text-warning" />
+                <span className="font-medium text-foreground">Children (0-14 years)</span>
               </div>
-            ))}
+              <p className="text-2xl font-bold text-foreground">
+                {exposureData.population.vulnerableGroups.children.toLocaleString()}
+              </p>
+              <Progress value={22.5} className="h-2 mt-2" />
+            </div>
+            <div className="p-4 rounded-lg bg-secondary/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Heart className="h-5 w-5 text-destructive" />
+                <span className="font-medium text-foreground">Elderly (65+ years)</span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">
+                {exposureData.population.vulnerableGroups.elderly.toLocaleString()}
+              </p>
+              <Progress value={11} className="h-2 mt-2" />
+            </div>
+            <div className="p-4 rounded-lg bg-secondary/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="h-5 w-5 text-primary" />
+                <span className="font-medium text-foreground">Disabled</span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">
+                {exposureData.population.vulnerableGroups.disabled.toLocaleString()}
+              </p>
+              <Progress value={5} className="h-2 mt-2" />
+            </div>
+            <div className="p-4 rounded-lg bg-secondary/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="h-5 w-5 text-accent" />
+                <span className="font-medium text-foreground">Low-Income Households</span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">
+                {exposureData.population.vulnerableGroups.lowIncome.toLocaleString()}
+              </p>
+              <Progress value={24} className="h-2 mt-2" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -184,30 +163,32 @@ export const ExposureInformation = () => {
           <CardDescription>Essential facilities and services</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {criticalInfrastructure.map((infra) => (
-              <div
-                key={infra.name}
-                className="flex items-start gap-3 p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-              >
-                <div className="p-2 rounded-lg bg-gradient-primary">
-                  <infra.icon className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-semibold text-foreground">{infra.name}</h4>
-                    <Badge className={statusColors[infra.status]} variant="secondary">
-                      {infra.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{infra.type}</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {infra.location}
-                  </p>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Heart className="h-8 w-8 text-destructive mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.infrastructure.hospitals}</p>
+              <p className="text-xs text-muted-foreground">Hospitals</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Building2 className="h-8 w-8 text-primary mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.infrastructure.schools}</p>
+              <p className="text-xs text-muted-foreground">Schools</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Zap className="h-8 w-8 text-warning mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.infrastructure.powerPlants}</p>
+              <p className="text-xs text-muted-foreground">Power Plants</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Radio className="h-8 w-8 text-success mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.infrastructure.commTowers}</p>
+              <p className="text-xs text-muted-foreground">Comm Towers</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <MapPin className="h-8 w-8 text-accent mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.infrastructure.transportHubs}</p>
+              <p className="text-xs text-muted-foreground">Transport Hubs</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -222,31 +203,27 @@ export const ExposureInformation = () => {
           <CardDescription>Key economic infrastructure and employment centers</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {economicAssets.map((asset) => (
-              <div
-                key={asset.name}
-                className="flex items-start gap-3 p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-              >
-                <div className="p-2 rounded-lg bg-gradient-primary">
-                  <asset.icon className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <h4 className="font-semibold text-foreground">{asset.name}</h4>
-                  <p className="text-sm text-muted-foreground">{asset.type}</p>
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="text-muted-foreground">
-                      Value: <span className="font-medium text-foreground">{asset.value}</span>
-                    </span>
-                    {asset.employees && (
-                      <span className="text-muted-foreground">
-                        Employees: <span className="font-medium text-foreground">{asset.employees.toLocaleString()}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Factory className="h-8 w-8 text-primary mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.economicAssets.factories}</p>
+              <p className="text-xs text-muted-foreground">Factories</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Warehouse className="h-8 w-8 text-warning mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.economicAssets.warehouses}</p>
+              <p className="text-xs text-muted-foreground">Warehouses</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <ShoppingBag className="h-8 w-8 text-success mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.economicAssets.commercial}</p>
+              <p className="text-xs text-muted-foreground">Commercial</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-secondary/30">
+              <Sprout className="h-8 w-8 text-accent mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{exposureData.economicAssets.farms}</p>
+              <p className="text-xs text-muted-foreground">Farms</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -261,29 +238,22 @@ export const ExposureInformation = () => {
           <CardDescription>Protected historical and cultural monuments</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {culturalHeritage.map((heritage) => (
-              <div
-                key={heritage.name}
-                className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-semibold text-foreground">{heritage.name}</h4>
-                    <Badge className={significanceColors[heritage.significance]} variant="secondary">
-                      {heritage.significance} significance
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{heritage.type}</p>
-                </div>
-                {heritage.yearBuilt && (
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Built</p>
-                    <p className="text-lg font-semibold text-foreground">{heritage.yearBuilt}</p>
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-6 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
+              <Landmark className="h-10 w-10 text-accent mx-auto mb-3" />
+              <p className="text-3xl font-bold text-foreground mb-1">{exposureData.culturalHeritage.temples}</p>
+              <p className="text-sm text-muted-foreground">Temples</p>
+            </div>
+            <div className="text-center p-6 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+              <Landmark className="h-10 w-10 text-primary mx-auto mb-3" />
+              <p className="text-3xl font-bold text-foreground mb-1">{exposureData.culturalHeritage.monuments}</p>
+              <p className="text-sm text-muted-foreground">Monuments</p>
+            </div>
+            <div className="text-center p-6 rounded-lg bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/20">
+              <Building2 className="h-10 w-10 text-warning mx-auto mb-3" />
+              <p className="text-3xl font-bold text-foreground mb-1">{exposureData.culturalHeritage.archives}</p>
+              <p className="text-sm text-muted-foreground">Archives</p>
+            </div>
           </div>
         </CardContent>
       </Card>

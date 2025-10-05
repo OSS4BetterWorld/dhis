@@ -1,54 +1,92 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface HistoricalEvent {
-  id: string;
-  type: string;
-  location: string;
-  date: string;
-  intensity: string;
-  casualties?: number;
-}
-
-const historicalEvents: HistoricalEvent[] = [
-  { id: "1", type: "Earthquake", location: "Japan", date: "2011-03-11", intensity: "9.1 Magnitude", casualties: 15899 },
-  { id: "2", type: "Tsunami", location: "Indonesia", date: "2004-12-26", intensity: "Severe", casualties: 227898 },
-  { id: "3", type: "Cyclone", location: "Myanmar", date: "2008-05-02", intensity: "Category 4", casualties: 138366 },
-  { id: "4", type: "Flood", location: "Pakistan", date: "2010-07-29", intensity: "High", casualties: 1985 },
-  { id: "5", type: "Wildfire", location: "Australia", date: "2020-01-08", intensity: "Extreme", casualties: 34 },
-];
+import { Clock, MapPin, TrendingUp, DollarSign, Users, Loader2 } from "lucide-react";
+import { mockApi } from "@/services/mockApi";
 
 export const HistoricalRecords = () => {
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const data = await mockApi.getHistoricalEvents();
+        setEvents(data);
+      } catch (error) {
+        console.error("Error fetching historical events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-card-foreground flex items-center gap-3">
+            <Clock className="h-8 w-8 text-primary" />
+            Historical Disaster Records
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="border-border bg-card">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-card-foreground flex items-center gap-2">
-          Historical Records
-          <Badge variant="secondary" className="bg-primary text-primary-foreground">
-            {historicalEvents.length} Events
-          </Badge>
+        <CardTitle className="text-3xl font-bold text-card-foreground flex items-center gap-3">
+          <Clock className="h-8 w-8 text-primary" />
+          Historical Disaster Records
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {historicalEvents.map((event) => (
+          {events.map((event, index) => (
             <div
-              key={event.id}
-              className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+              key={index}
+              className="p-4 rounded-lg bg-secondary/30 hover:shadow-md transition-all"
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-foreground">{event.type}</h4>
-                  <span className="text-sm text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">{event.location}</span>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-foreground text-lg">{event.type}</h4>
+                    <Badge variant="outline" className="border-primary text-primary">
+                      {event.intensity}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {event.location}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {event.date}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{event.date}</p>
-              </div>
-              <div className="text-right space-y-1">
-                <Badge variant="outline" className="border-primary text-primary">{event.intensity}</Badge>
-                {event.casualties && (
-                  <p className="text-sm text-muted-foreground">{event.casualties.toLocaleString()} casualties</p>
-                )}
+                <div className="text-right space-y-1">
+                  <div className="flex items-center gap-1 text-destructive">
+                    <Users className="h-4 w-4" />
+                    <span className="font-semibold">{event.casualties}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">casualties</p>
+                  <div className="flex items-center gap-1 text-warning mt-2">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="font-semibold">{event.economicLoss}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">economic loss</p>
+                </div>
               </div>
             </div>
           ))}

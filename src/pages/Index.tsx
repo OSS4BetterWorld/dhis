@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { DisasterCard } from "@/components/DisasterCard";
 import { HistoricalRecords } from "@/components/HistoricalRecord";
 import { MonitoringDashboard } from "@/components/MonitoringDashboard";
@@ -10,11 +11,48 @@ import {
   Mountain, 
   Activity,
   AlertTriangle,
-  Factory
+  Factory,
+  Loader2
 } from "lucide-react";
+import { mockApi } from "@/services/mockApi";
 
 const Index = () => {
-  const disasterTypes = [
+  const [disasterTypes, setDisasterTypes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDisasterTypes = async () => {
+      setLoading(true);
+      try {
+        const data = await mockApi.getDisasterTypes();
+        const iconsMap: Record<string, any> = {
+          Earthquake: Activity,
+          Flood: CloudRain,
+          Tsunami: Waves,
+          Cyclone: Wind,
+          Wildfire: Flame,
+          Landslide: Mountain,
+          Epidemic: AlertTriangle,
+          "Industrial Accident": Factory,
+        };
+        
+        const typesWithIcons = data.map(disaster => ({
+          ...disaster,
+          icon: iconsMap[disaster.title]
+        }));
+        
+        setDisasterTypes(typesWithIcons);
+      } catch (error) {
+        console.error("Error fetching disaster types:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDisasterTypes();
+  }, []);
+
+  const staticDisasterTypes = [
     {
       title: "Earthquake",
       description: "Seismic activity and ground movement monitoring",
@@ -93,11 +131,17 @@ const Index = () => {
         {/* Disaster Types Grid */}
         <section>
           <h2 className="text-3xl font-bold text-foreground mb-6">Monitored Hazard Types</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {disasterTypes.map((disaster) => (
-              <DisasterCard key={disaster.title} {...disaster} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {disasterTypes.map((disaster) => (
+                <DisasterCard key={disaster.title} {...disaster} />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Historical Records */}
