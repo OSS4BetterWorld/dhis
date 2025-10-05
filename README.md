@@ -1,4 +1,6 @@
-# Welcome to your Lovable project
+# Disaster Hazard Identification System ( Built with Lovable )
+
+<img width="1017" height="680" alt="image" src="https://github.com/user-attachments/assets/d40e2aa3-e09d-4282-9ca2-05783f2019cc" />
 
 ## Project info
 
