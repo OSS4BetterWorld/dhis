@@ -3,6 +3,9 @@ import { DisasterCard } from "@/components/DisasterCard";
 import { HistoricalRecords } from "@/components/HistoricalRecord";
 import { MonitoringDashboard } from "@/components/MonitoringDashboard";
 import { ExposureInformation } from "@/components/ExposureInformation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   CloudRain, 
   Waves, 
@@ -12,7 +15,9 @@ import {
   Activity,
   AlertTriangle,
   Factory,
-  Loader2
+  Loader2,
+  MapPin,
+  Shield
 } from "lucide-react";
 import { mockApi } from "@/services/mockApi";
 
@@ -128,6 +133,42 @@ const Index = () => {
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 py-12 space-y-12">
+        {/* Risk Map Feature Card */}
+        <section>
+          <Card className="bg-gradient-accent text-accent-foreground border-none shadow-lg">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <MapPin className="h-6 w-6" />
+                    Risk Mapping & Zoning
+                  </CardTitle>
+                  <CardDescription className="text-accent-foreground/90">
+                    Explore interactive risk zones, find nearby shelters, and view evacuation routes
+                  </CardDescription>
+                </div>
+                <Shield className="h-16 w-16 opacity-20" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <Link to="/risk-map">
+                  <Button size="lg" variant="secondary">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    View Risk Map
+                  </Button>
+                </Link>
+                <Link to="/admin/risk-map">
+                  <Button size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Disaster Types Grid */}
         <section>
           <h2 className="text-3xl font-bold text-foreground mb-6">Monitored Hazard Types</h2>
