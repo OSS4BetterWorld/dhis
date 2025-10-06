@@ -23,7 +23,7 @@ const CitizenRiskMap = () => {
   const [selectedZone, setSelectedZone] = useState<RiskZone | null>(null);
   const [selectedShelter, setSelectedShelter] = useState<Shelter | null>(null);
   const [loading, setLoading] = useState(true);
-  const [googleMapsApiKey, setGoogleMapsApiKey] = useState("");
+  const googleMapsApiKey = 'AIzaSyDNnlU13kUEQjf1qUbGEdui0nP2SOLdExU';
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -79,53 +79,6 @@ const CitizenRiskMap = () => {
     };
     return tips[zone.type] || "Stay alert and follow emergency guidelines.";
   };
-
-  if (!googleMapsApiKey) {
-    return (
-      <div className="min-h-screen bg-gradient-subtle p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
-            <Link to="/">
-              <Button variant="ghost" size="sm">
-                <Home className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Google Maps API Key Required</CardTitle>
-              <CardDescription>
-                Please enter your Google Maps API key to view the risk map. You can get one from{" "}
-                <a
-                  href="https://console.cloud.google.com/google/maps-apis"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline"
-                >
-                  Google Cloud Console
-                </a>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="AIza..."
-                  className="w-full px-4 py-2 border rounded-md"
-                  onChange={(e) => setGoogleMapsApiKey(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Google Maps API keys are public keys designed for frontend use. In production, you can
-                  restrict the key to specific domains for added security.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
