@@ -1,22 +1,34 @@
-import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { useEffect, useState } from "react";
+import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow } from "@react-google-maps/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, MapPin, Navigation, Phone, Shield, Home } from "lucide-react";
+import { AlertTriangle, MapPin, Phone, Shield, Home } from "lucide-react";
 import { mockApi, RiskZone, Shelter } from "@/services/mockRiskData";
 import { Link } from "react-router-dom";
 
+const containerStyle = {
+  width: "100%",
+  height: "600px",
+};
+
+const center = {
+  lat: 21.0245,
+  lng: 105.8342,
+};
+
 const CitizenRiskMap = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
   const [riskZones, setRiskZones] = useState<RiskZone[]>([]);
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [selectedZone, setSelectedZone] = useState<RiskZone | null>(null);
-  const [nearestShelter, setNearestShelter] = useState<Shelter | null>(null);
+  const [selectedShelter, setSelectedShelter] = useState<Shelter | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mapboxToken, setMapboxToken] = useState("");
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState("");
+
+  const { isLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: googleMapsApiKey,
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,110 +43,20 @@ const CitizenRiskMap = () => {
     loadData();
   }, []);
 
-  useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || loading) return;
-
-    mapboxgl.accessToken = mapboxToken;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [105.8342, 21.0245],
-      zoom: 13,
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-
-    map.current.on("load", () => {
-      // Add risk zones
-      riskZones.forEach((zone) => {
-        const color =
-          zone.riskLevel === "high"
-            ? "#dc2626"
-            : zone.riskLevel === "medium"
-            ? "#f59e0b"
-            : "#16a34a";
-
-        if (map.current) {
-          map.current.addSource(zone.id, {
-            type: "geojson",
-            data: {
-              type: "Feature",
-              geometry: {
-                type: "Polygon",
-                coordinates: [zone.coordinates],
-              },
-              properties: zone,
-            },
-          });
-
-          map.current.addLayer({
-            id: zone.id,
-            type: "fill",
-            source: zone.id,
-            paint: {
-              "fill-color": color,
-              "fill-opacity": 0.4,
-            },
-          });
-
-          map.current.addLayer({
-            id: `${zone.id}-border`,
-            type: "line",
-            source: zone.id,
-            paint: {
-              "line-color": color,
-              "line-width": 2,
-            },
-          });
-
-          map.current.on("click", zone.id, () => {
-            setSelectedZone(zone);
-          });
-        }
-      });
-
-      // Add shelter markers
-      shelters.forEach((shelter) => {
-        const el = document.createElement("div");
-        el.className = "shelter-marker";
-        el.style.cssText = `
-          background: hsl(var(--primary));
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          border: 3px solid white;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        `;
-        el.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>`;
-
-        if (map.current) {
-          new mapboxgl.Marker(el)
-            .setLngLat(shelter.coordinates)
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 }).setHTML(
-                `<div style="padding: 8px;">
-                  <h3 style="font-weight: 600; margin-bottom: 4px;">${shelter.name}</h3>
-                  <p style="font-size: 12px; color: #666;">Capacity: ${shelter.capacity}</p>
-                  <p style="font-size: 12px; color: #666;">Contact: ${shelter.contact}</p>
-                </div>`
-              )
-            )
-            .addTo(map.current);
-        }
-      });
-    });
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [mapboxToken, loading, riskZones, shelters]);
-
   const getRiskColor = (level: string) => {
+    switch (level) {
+      case "high":
+        return "#dc2626";
+      case "medium":
+        return "#f59e0b";
+      case "low":
+        return "#16a34a";
+      default:
+        return "#6b7280";
+    }
+  };
+
+  const getRiskBadgeColor = (level: string) => {
     switch (level) {
       case "high":
         return "bg-destructive text-destructive-foreground";
@@ -158,7 +80,7 @@ const CitizenRiskMap = () => {
     return tips[zone.type] || "Stay alert and follow emergency guidelines.";
   };
 
-  if (!mapboxToken) {
+  if (!googleMapsApiKey) {
     return (
       <div className="min-h-screen bg-gradient-subtle p-6">
         <div className="max-w-4xl mx-auto">
@@ -172,16 +94,16 @@ const CitizenRiskMap = () => {
           </div>
           <Card>
             <CardHeader>
-              <CardTitle>Mapbox Token Required</CardTitle>
+              <CardTitle>Google Maps API Key Required</CardTitle>
               <CardDescription>
-                Please enter your Mapbox public token to view the risk map. You can get one from{" "}
+                Please enter your Google Maps API key to view the risk map. You can get one from{" "}
                 <a
-                  href="https://mapbox.com"
+                  href="https://console.cloud.google.com/google/maps-apis"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline"
                 >
-                  mapbox.com
+                  Google Cloud Console
                 </a>
               </CardDescription>
             </CardHeader>
@@ -189,12 +111,13 @@ const CitizenRiskMap = () => {
               <div className="space-y-4">
                 <input
                   type="text"
-                  placeholder="pk.eyJ1..."
+                  placeholder="AIza..."
                   className="w-full px-4 py-2 border rounded-md"
-                  onChange={(e) => setMapboxToken(e.target.value)}
+                  onChange={(e) => setGoogleMapsApiKey(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  This is temporary. In production, this would be securely stored in backend configuration.
+                  Google Maps API keys are public keys designed for frontend use. In production, you can
+                  restrict the key to specific domains for added security.
                 </p>
               </div>
             </CardContent>
@@ -234,7 +157,89 @@ const CitizenRiskMap = () => {
           <div className="lg:col-span-2">
             <Card>
               <CardContent className="p-0">
-                <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
+                {isLoaded && !loading ? (
+                  <GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={center}
+                    zoom={13}
+                    options={{
+                      mapTypeControl: true,
+                      streetViewControl: false,
+                      fullscreenControl: true,
+                    }}
+                  >
+                    {/* Risk Zone Polygons */}
+                    {riskZones.map((zone) => {
+                      const paths = zone.coordinates.map((coord) => ({
+                        lat: coord[1],
+                        lng: coord[0],
+                      }));
+
+                      return (
+                        <Polygon
+                          key={zone.id}
+                          paths={paths}
+                          options={{
+                            fillColor: getRiskColor(zone.riskLevel),
+                            fillOpacity: 0.4,
+                            strokeColor: getRiskColor(zone.riskLevel),
+                            strokeOpacity: 1,
+                            strokeWeight: 2,
+                            clickable: true,
+                          }}
+                          onClick={() => setSelectedZone(zone)}
+                        />
+                      );
+                    })}
+
+                    {/* Shelter Markers */}
+                    {shelters.map((shelter) => (
+                      <Marker
+                        key={shelter.id}
+                        position={{ lat: shelter.coordinates[1], lng: shelter.coordinates[0] }}
+                        icon={{
+                          path: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+                          fillColor: "hsl(213 94% 25%)",
+                          fillOpacity: 1,
+                          strokeColor: "#ffffff",
+                          strokeWeight: 2,
+                          scale: 1.5,
+                        }}
+                        onClick={() => setSelectedShelter(shelter)}
+                      />
+                    ))}
+
+                    {/* Shelter Info Window */}
+                    {selectedShelter && (
+                      <InfoWindow
+                        position={{
+                          lat: selectedShelter.coordinates[1],
+                          lng: selectedShelter.coordinates[0],
+                        }}
+                        onCloseClick={() => setSelectedShelter(null)}
+                      >
+                        <div style={{ padding: "8px", minWidth: "200px" }}>
+                          <h3 style={{ fontWeight: 600, marginBottom: "4px", fontSize: "14px" }}>
+                            {selectedShelter.name}
+                          </h3>
+                          <p style={{ fontSize: "12px", color: "#666", margin: "2px 0" }}>
+                            Capacity: {selectedShelter.capacity}
+                          </p>
+                          <p style={{ fontSize: "12px", color: "#666", margin: "2px 0" }}>
+                            Contact: {selectedShelter.contact}
+                          </p>
+                          <p style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>
+                            Status: {selectedShelter.status}
+                          </p>
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </GoogleMap>
+                ) : (
+                  <div className="w-full h-[600px] flex items-center justify-center bg-muted">
+                    <p className="text-muted-foreground">Loading map...</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -279,7 +284,7 @@ const CitizenRiskMap = () => {
                       <CardTitle className="text-lg">{selectedZone.name}</CardTitle>
                       <CardDescription className="mt-1">{selectedZone.description}</CardDescription>
                     </div>
-                    <Badge className={getRiskColor(selectedZone.riskLevel)}>
+                    <Badge className={getRiskBadgeColor(selectedZone.riskLevel)}>
                       {selectedZone.riskLevel.toUpperCase()}
                     </Badge>
                   </div>
