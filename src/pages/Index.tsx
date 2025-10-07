@@ -17,7 +17,8 @@ import {
   Factory,
   Loader2,
   MapPin,
-  Shield
+  Shield,
+  FileText
 } from "lucide-react";
 import { mockApi } from "@/services/mockApi";
 
@@ -165,6 +166,34 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Incident Report Feature Card */}
+        <section>
+          <Card className="bg-gradient-primary text-primary-foreground border-none shadow-lg">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <FileText className="h-6 w-6" />
+                    Incident Report Management
+                  </CardTitle>
+                  <CardDescription className="text-primary-foreground/90">
+                    Real-time citizen reports, resource tracking, and rescue team coordination
+                  </CardDescription>
+                </div>
+                <AlertTriangle className="h-16 w-16 opacity-20" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Link to="/incident-report">
+                <Button size="lg" variant="secondary">
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Incident Reports
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </section>
