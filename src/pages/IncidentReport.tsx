@@ -20,8 +20,7 @@ const center = {
 };
 
 const IncidentReportPage = () => {
-  const [apiKey, setApiKey] = useState('');
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const googleMapsApiKey = 'AIzaSyDNnlU13kUEQjf1qUbGEdui0nP2SOLdExU';
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
   const [rescueTeams, setRescueTeams] = useState<RescueTeam[]>([]);
   const [selectedIncident, setSelectedIncident] = useState<IncidentReport | null>(null);
@@ -31,7 +30,7 @@ const IncidentReportPage = () => {
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: apiKey || ''
+    googleMapsApiKey: googleMapsApiKey
   });
 
   useEffect(() => {
@@ -122,44 +121,6 @@ const IncidentReportPage = () => {
     return icons[type] || '⚠️';
   };
 
-  if (!apiKey || !mapLoaded) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Google Maps API Key Required</CardTitle>
-              <CardDescription>
-                Enter your Google Maps API key to view the incident report map
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input
-                type="text"
-                placeholder="Enter your Google Maps API key (AIza...)"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <Button onClick={() => setMapLoaded(true)} className="w-full">
-                Load Map
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Get your API key from{' '}
-                <a
-                  href="https://developers.google.com/maps/documentation/javascript/get-api-key"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline"
-                >
-                  Google Cloud Console
-                </a>
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
